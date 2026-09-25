@@ -546,7 +546,7 @@ window.createFireTransition = function (canvas, persistent = false) {
     let previous=0;
     function draw(now){
       const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const t=persistent&&reduced?1.4:(now-start)/1000;
+      const t=persistent&&reduced?1.4:(now-start)/1000*(persistent?1:1.8);
       if((!persistent&&t>=3.2)||gl.isContextLost()){stop();done();return;}
       if(persistent&&(document.hidden||canvas.closest('.screen').hidden||now-previous<33)){
         frame=requestAnimationFrame(draw);return;
@@ -607,12 +607,12 @@ window.themeMotion = (() => {
   function reveal(){
     finish();
     if(reduced.matches||!window.gsap)return;
-    sequence=gsap.timeline({defaults:{ease:'power3.out',duration:1,clearProps:'transform,opacity'}});
-    sequence.fromTo('.profile-header',{opacity:0,y:8},{opacity:1,y:0},.5)
-      .fromTo('.profile-content',{opacity:0,y:18},{opacity:1,y:0},.65)
-      .fromTo('.portrait-strip figure',{opacity:0,y:28},{opacity:1,y:0,stagger:.12},.85)
-      .fromTo('.video-gallery',{opacity:0,y:24},{opacity:1,y:0},1.2)
-      .fromTo('.profile-footer',{opacity:0},{opacity:1,duration:.5},1.6);
+    sequence=gsap.timeline({defaults:{ease:'power3.out',duration:.65,clearProps:'transform,opacity'}});
+    sequence.fromTo('.profile-header',{opacity:0,y:8},{opacity:1,y:0},.1)
+      .fromTo('.profile-content',{opacity:0,y:18},{opacity:1,y:0},.2)
+      .fromTo('.portrait-strip figure',{opacity:0,y:28},{opacity:1,y:0,stagger:.08},.3)
+      .fromTo('.video-gallery',{opacity:0,y:24},{opacity:1,y:0},.5)
+      .fromTo('.profile-footer',{opacity:0},{opacity:1,duration:.5},.6);
   }
   reduced.addEventListener('change',()=>{if(reduced.matches)finish();});
   return {reveal,finish};
@@ -967,6 +967,7 @@ THREE.Fire.prototype.update = function ( time ) {
 
 
   function finishDragon() {
+    if (!dragonActive) return;
     clearTimeout(dragonTimer);
     fireRenderer?.stop();
     window.themeMotion.finish();
@@ -974,10 +975,10 @@ THREE.Fire.prototype.update = function ( time ) {
     dragonTransition.hidden = true;
     document.body.classList.remove('dragon-active');
     document.getElementById('profile').inert = false;
-    showScreen('profile');
+    document.getElementById('profile-name').focus({ preventScroll: true });
   }
   function enterProfile() {
-    if (dragonActive) return;
+    if (dragonActive || document.body.dataset.screen !== 'cinema') return;
     player.loop = true;
     if (player.ended) player.currentTime = 0;
     player.play().catch(syncMusicButton);
@@ -991,7 +992,7 @@ THREE.Fire.prototype.update = function ( time ) {
     document.body.classList.add('dragon-active');
     document.getElementById('skip-dragon').focus({ preventScroll: true });
     animateFireReveal();
-    if (dragonActive) dragonTimer = setTimeout(finishDragon, 3500);
+    if (dragonActive) dragonTimer = setTimeout(finishDragon, 2000);
   }
   let fireRenderer;
   const warmFire = () => { fireRenderer ||= window.createFireTransition(document.getElementById('transition-flames')); };
