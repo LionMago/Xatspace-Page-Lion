@@ -373,6 +373,11 @@ body[data-screen="cinema"] .mist,body[data-screen="cinema"] .dragon-flight,body[
 body[data-screen="cinema"] .landscape,body[data-screen="cinema"] .atmosphere::before{animation-play-state:paused}
 body.effects-paused .landscape,body.effects-paused .mist,body.effects-paused .dragon-flight,body.effects-paused .dragon-sprite,body.effects-paused .atmosphere::before{animation-play-state:paused}
 @media(prefers-reduced-motion:reduce){.landscape{animation:none;transform:none}.atmosphere::before{animation:none}}
+
+/* Keep the viewport width and content position stable throughout the reveal. */
+html{overflow-y:scroll;scrollbar-gutter:stable}
+body[data-screen="cinema"],body.dragon-active{overflow:visible;overflow-x:clip}
+.profile{backdrop-filter:none}
 </style>
   
   
@@ -608,10 +613,10 @@ window.themeMotion = (() => {
     finish();
     if(reduced.matches||!window.gsap)return;
     sequence=gsap.timeline({defaults:{ease:'power3.out',duration:.65,clearProps:'transform,opacity'}});
-    sequence.fromTo('.profile-header',{opacity:0,y:8},{opacity:1,y:0},.1)
-      .fromTo('.profile-content',{opacity:0,y:18},{opacity:1,y:0},.2)
-      .fromTo('.portrait-strip figure',{opacity:0,y:28},{opacity:1,y:0,stagger:.08},.3)
-      .fromTo('.video-gallery',{opacity:0,y:24},{opacity:1,y:0},.5)
+    sequence.fromTo('.profile-header',{opacity:0},{opacity:1},.1)
+      .fromTo('.profile-content',{opacity:0},{opacity:1},.2)
+      .fromTo('.portrait-strip figure',{opacity:0},{opacity:1,stagger:.08},.3)
+      .fromTo('.video-gallery',{opacity:0},{opacity:1},.5)
       .fromTo('.profile-footer',{opacity:0},{opacity:1,duration:.5},.6);
   }
   reduced.addEventListener('change',()=>{if(reduced.matches)finish();});
@@ -975,6 +980,7 @@ THREE.Fire.prototype.update = function ( time ) {
     dragonTransition.hidden = true;
     document.body.classList.remove('dragon-active');
     document.getElementById('profile').inert = false;
+    window.videoGallery.setActive(true);
     document.getElementById('profile-name').focus({ preventScroll: true });
   }
   function enterProfile() {
@@ -1013,7 +1019,7 @@ THREE.Fire.prototype.update = function ( time ) {
     if(name !== 'profile') window.themeMotion.finish();
     document.body.dataset.screen = name;
     screens.forEach(id => { document.getElementById(id).hidden = id !== name; });
-    window.videoGallery.setActive(name === 'profile');
+    window.videoGallery.setActive(name === 'profile' && !dragonActive);
     if (name === 'entrance') {
       clearTimeout(loadingTimer);
       player.pause();
